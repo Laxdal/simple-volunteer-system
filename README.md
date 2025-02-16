@@ -105,9 +105,3 @@ npm test
 ## 许可证
 
 本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
-
-## 联系方式
-
-- 项目维护者：[Your Name]
-- 邮箱：[Your Email]
-- 项目链接：[GitHub Repository URL] 
