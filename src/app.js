@@ -60,7 +60,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
 // MongoDB 连接
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://admin:yhos2025@192.168.1.101:27017/volunteer?authSource=admin';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://{UserName}:{Password}@localhost:27017/volunteer?authSource=admin';
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log('MongoDB 连接成功'))

@@ -9,7 +9,7 @@
 ### 前提条件
 
 1. 确保MongoDB服务器正在运行
-2. 确保环境变量`MONGO_URI`已正确设置（默认值：`mongodb://admin:yhos2025@192.168.1.101:27017/volunteer?authSource=admin`）
+2. 确保环境变量`MONGO_URI`已正确设置（默认值：`mongodb://{UserName}:{Password}@localhost:27017/volunteer?authSource=admin`）
 
 ### 执行脚本
 
@@ -106,7 +106,7 @@ npm run generate-test-data
 
 3. 通过管理员API：
 ```bash
-curl -X POST https://nodejs.yhos.org/api/rankings/update \
+curl -X POST https://{YOUR_DOMAIN}/api/rankings/update \
      -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
 ```
 

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const UserStats = require('../models/userStats');
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://admin:yhos2025@192.168.1.101:27017/volunteer?authSource=admin';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://{UserName}:{Password}@localhost:27017/volunteer?authSource=admin';
 
 async function updateAllStats() {
     try {
