@@ -36,7 +36,7 @@
 
 1. 克隆仓库
 ```bash
-git clone https://github.com/yourusername/volunteer-system.git
+git clone https://github.com/Laxdal/simple-volunteer-system.git
 cd volunteer-system
 ```
 
