@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>义工系统 - 会员界面</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .panel {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button.secondary {
+            background-color: #2196F3;
+        }
+        button.secondary:hover {
+            background-color: #1976D2;
+        }
+        button.danger {
+            background-color: #f44336;
+        }
+        button.danger:hover {
+            background-color: #da190b;
+        }
+        .status-badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-draft { background-color: #ffd700; }
+        .status-published { background-color: #90EE90; }
+        .status-cancelled { background-color: #ffcccb; }
+        .status-completed { background-color: #d3d3d3; }
+        .activity-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            background: white;
+        }
+        .tab-buttons {
+            margin-bottom: 20px;
+        }
+        .tab-buttons button {
+            background-color: #ddd;
+        }
+        .tab-buttons button.active {
+            background-color: #4CAF50;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            display: none;
+        }
+        .success { color: #4CAF50; }
+        .error { color: #f44336; }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .table th, .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+        .table tr:hover {
+            background-color: #f9f9f9;
+        }
+        .username-link {
+            color: #2196F3;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .username-link:hover {
+            text-decoration: underline;
+        }
+        .current-user-rank {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-radius: 4px;
+            border: 1px solid #c8e6c9;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 4px;
+            position: relative;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: black;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .pagination button {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+        }
+        .pagination button.active {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+        .pagination button:disabled {
+            background: #f5f5f5;
+            cursor: not-allowed;
+        }
+        .user-details-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .user-details-info p {
+            margin: 8px 0;
+        }
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .user-menu {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .user-menu-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 4px;
+        }
+        
+        .user-menu-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .user-menu-content a:hover {
+            background-color: #f1f1f1;
+        }
+        
+        .user-menu:hover .user-menu-content {
+            display: block;
+        }
+        
+        .user-button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .user-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-container">
+        <h1>义工系统会员界面</h1>
+        <div id="userMenuContainer">
+            <!-- 用户菜单将通过JavaScript动态加载 -->
+        </div>
+    </div>
+    
+    <!-- 登录面板 -->
+    <div class="panel" id="loginPanel">
+        <h2>会员登录</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">用户名:</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">密码:</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit">登录</button>
+        </form>
+    </div>
+
+    <!-- 主要操作面板（登录后显示） -->
+    <div id="mainPanel" style="display: none;">
+        <div class="panel">
+            <h2>我的义工时数</h2>
+            <div id="userStats">
+                <p>总参与时长: <span id="userTotalHours">0</span> 小时</p>
+            </div>
+        </div>
+        
+        <div class="tab-buttons">
+            <button onclick="showTab('activities')" class="active">可报名活动</button>
+            <button onclick="showTab('myParticipations')">我的活动</button>
+            <button onclick="showTab('rankings')">排行榜</button>
+        </div>
+
+        <!-- 可报名活动列表 -->
+        <div id="activitiesTab" class="tab-content active">
+            <div class="panel">
+                <h2>可报名活动</h2>
+                <div id="activitiesList"></div>
+            </div>
+        </div>
+
+        <!-- 我的活动列表 -->
+        <div id="myParticipationsTab" class="tab-content">
+            <div class="panel">
+                <h2>我的活动</h2>
+                <div id="myParticipationsList"></div>
+            </div>
+        </div>
+
+        <!-- 排行榜内容 -->
+        <div id="rankingsTab" class="tab-content">
+            <div class="panel">
+                <h2>义工排行榜</h2>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>用户名</th>
+                                <th>总时长(小时)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rankingsList">
+                            <!-- 排行榜数据将通过JavaScript动态加载 -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="rankingsPagination" class="pagination">
+                    <!-- 分页控件将通过JavaScript动态加载 -->
+                </div>
+                <div id="currentUserRank" class="current-user-rank">
+                    <!-- 当前用户排名信息将通过JavaScript动态加载 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加用户详情模态框 -->
+    <div class="modal" id="userDetailsModal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="userDetailsContent">
+                <!-- 用户详情将通过JavaScript动态加载 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 结果显示区域 -->
+    <div id="result"></div>
+
+    <script>
+        const API_BASE_URL = 'https://nodejs.yhos.org';
+        let authToken = localStorage.getItem('memberToken');
+        let tokenExpiration = localStorage.getItem('tokenExpiration');
+        let currentUserId;
+
+        // 检查 token 是否过期
+        function isTokenExpired() {
+            const expiration = localStorage.getItem('tokenExpiration');
+            if (!expiration) return true;
+            return Date.now() >= parseInt(expiration);
+        }
+
+        // 清除登录状态
+        function clearAuth() {
+            localStorage.removeItem('memberToken');
+            localStorage.removeItem('tokenExpiration');
+            localStorage.removeItem('userInfo');
+            authToken = null;
+            tokenExpiration = null;
+        }
+
+        // 显示结果
+        function showResult(data, isError = false) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = isError ? 'error' : 'success';
+            resultDiv.innerHTML = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        }
+
+        // 切换标签页
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-buttons button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // 加载用户统计信息
+        async function loadUserStats() {
+            try {
+                if (!authToken) {
+                    console.log('用户未登录');
+                    return;
+                }
+
+                // 先获取当前用户信息
+                const userResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (!userResponse.ok) {
+                    throw new Error('获取用户信息失败');
+                }
+                
+                const userData = await userResponse.json();
+                currentUserId = userData._id;
+
+                // 获取用户统计信息
+                const statsResponse = await fetch(`${API_BASE_URL}/api/rankings/user/${currentUserId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (!statsResponse.ok) {
+                    throw new Error('获取统计信息失败');
+                }
+
+                const statsData = await statsResponse.json();
+                
+                // 更新所有显示总时长的元素
+                const totalHoursElements = [
+                    document.getElementById('userTotalHours'),
+                    document.getElementById('totalHours')
+                ];
+
+                totalHoursElements.forEach(element => {
+                    if (element) {
+                        element.textContent = statsData.totalHours.toFixed(1);
+                    }
+                });
+
+                // 显示面板
+                document.getElementById('mainPanel').style.display = 'block';
+            } catch (error) {
+                console.error('加载用户统计信息错误:', error);
+                showResult('加载统计信息失败，请稍后重试', true);
+            }
+        }
+
+        // 检查登录状态
+        function checkAuth() {
+            if (authToken && !isTokenExpired()) {
+                document.getElementById('loginPanel').style.display = 'none';
+                document.getElementById('mainPanel').style.display = 'block';
+                loadActivities();
+                loadMyParticipations();
+                loadUserStats();
+                loadRankings(); // 加载排行榜
+            } else {
+                clearAuth();
+                document.getElementById('loginPanel').style.display = 'block';
+                document.getElementById('mainPanel').style.display = 'none';
+            }
+        }
+
+        // 登录表单处理
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: document.getElementById('username').value,
+                        password: document.getElementById('password').value
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message);
+
+                authToken = data.token;
+                // 设置 token 过期时间
+                const expirationTime = Date.now() + (data.expiresIn * 1000);
+                localStorage.setItem('memberToken', authToken);
+                localStorage.setItem('tokenExpiration', expirationTime);
+                localStorage.setItem('userInfo', JSON.stringify({
+                    username: data.user.username,
+                    id: data.user.id
+                }));
+                showResult('登录成功');
+                checkAuth();
+                updateUserMenu();
+            } catch (error) {
+                showResult(error.message, true);
+            }
+        });
+
+        // 加载可报名活动列表
+        async function loadActivities() {
+            try {
+                const response = await fetchWithAuth(`${API_BASE_URL}/api/activities?status=published`);
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message);
+
+                const activitiesList = document.getElementById('activitiesList');
+                activitiesList.innerHTML = data.activities.map(activity => `
+                    <div class="activity-item">
+                        <h3>${activity.name}</h3>
+                        <p>${activity.description}</p>
+                        <p>地点: ${activity.location.name}</p>
+                        <p>时间: ${new Date(activity.startTime).toLocaleString()} - ${new Date(activity.endTime).toLocaleString()}</p>
+                        <p>参与人数: ${activity.currentParticipants}/${activity.maxParticipants}</p>
+                        <button onclick="registerActivity('${activity._id}')" ${activity.isRegisterable ? '' : 'disabled'}>
+                            ${activity.isRegisterable ? '报名' : '已满/已结束'}
+                        </button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                showResult(error.message, true);
+            }
+        }
+
+        // 加载我的参与记录
+        async function loadMyParticipations() {
+            try {
+                const response = await fetchWithAuth(`${API_BASE_URL}/api/participations/my`);
+                const participations = await response.json();
+                if (!response.ok) throw new Error(participations.message);
+
+                const myParticipationsList = document.getElementById('myParticipationsList');
+                myParticipationsList.innerHTML = participations.map(participation => `
+                    <div class="activity-item">
+                        <h3>${participation.activity.name}</h3>
+                        <p>状态: ${participation.status}</p>
+                        <p>报名时间: ${new Date(participation.registrationTime).toLocaleString()}</p>
+                        ${participation.checkIn?.time ? 
+                            `<p>签到时间: ${new Date(participation.checkIn.time).toLocaleString()}</p>` : ''}
+                        ${participation.checkOut?.time ? 
+                            `<p>签退时间: ${new Date(participation.checkOut.time).toLocaleString()}</p>` : ''}
+                        ${participation.participationHours ? 
+                            `<p>参与时长: ${participation.participationHours}小时</p>` : ''}
+                        <div>
+                            ${participation.status === 'registered' ? `
+                                <button class="danger" onclick="cancelRegistration('${participation.activity._id}')">取消报名</button>
+                                <button class="secondary" onclick="checkIn('${participation.activity._id}')">签到</button>
+                            ` : ''}
+                            ${participation.status === 'registered' && participation.checkIn?.time ? `
+                                <button class="secondary" onclick="checkOut('${participation.activity._id}')">签退</button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                showResult(error.message, true);
+            }
+        }
+
+        // 报名活动
+        async function registerActivity(activityId) {
+            try {
+                const response = await fetchWithAuth(`${API_BASE_URL}/api/participations/${activityId}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message);
+
+                showResult('报名成功');
+                loadActivities();
+                loadMyParticipations();
+            } catch (error) {
+                showResult(error.message, true);
+            }
+        }
+
+        // 取消报名
+        async function cancelRegistration(activityId) {
+            if (!confirm('确定要取消报名吗？')) return;
+            
+            try {
+                const response = await fetchWithAuth(`${API_BASE_URL}/api/participations/${activityId}/cancel`);
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message);
+
+                showResult('取消报名成功');
+                loadActivities();
+                loadMyParticipations();
+            } catch (error) {
+                showResult(error.message, true);
+            }
+        }
+
+        // 签到
+        async function checkIn(activityId) {
+            try {
+                const position = await getCurrentPosition();
+                const device = navigator.userAgent;
+
+                const response = await fetchWithAuth(`${API_BASE_URL}/api/participations/${activityId}/check-in`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        latitude: position?.coords.latitude,
+                        longitude: position?.coords.longitude,
+                        device
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message);
+
+                showResult('签到成功');
+                loadMyParticipations();
+            } catch (error) {
+                showResult(error.message, true);
+            }
+        }
+
+        // 签退
+        async function checkOut(activityId) {
+            try {
+                const position = await getCurrentPosition();
+
+                const response = await fetchWithAuth(`${API_BASE_URL}/api/participations/${activityId}/check-out`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        latitude: position?.coords.latitude,
+                        longitude: position?.coords.longitude
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message);
+
+                showResult('签退成功');
+                document.getElementById('userTotalHours').textContent = 
+                    data.totalHours.toFixed(1);
+                loadMyParticipations();
+            } catch (error) {
+                showResult(error.message, true);
+            }
+        }
+
+        // 获取当前位置
+        function getCurrentPosition() {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    resolve(null);
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    position => resolve(position),
+                    error => {
+                        console.warn('获取位置失败:', error);
+                        resolve(null);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 5000,
+                        maximumAge: 0
+                    }
+                );
+            });
+        }
+
+        // 加载排行榜数据
+        async function loadRankings(page = 1) {
+            try {
+                const response = await fetchWithAuth(`${API_BASE_URL}/api/rankings?page=${page}`);
+                
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message);
+
+                // 更新排行榜列表
+                const rankingsList = document.getElementById('rankingsList');
+                rankingsList.innerHTML = data.rankings.map(rank => `
+                    <tr>
+                        <td>${rank.rank}</td>
+                        <td><a href="#" class="username-link" onclick="showUserDetails('${rank.userId}')">${rank.username}</a></td>
+                        <td>${rank.totalHours.toFixed(1)}</td>
+                    </tr>
+                `).join('');
+
+                // 更新分页控件
+                updatePagination(data.page, data.totalPages);
+
+                // 更新当前用户排名信息
+                const currentUserRank = document.getElementById('currentUserRank');
+                currentUserRank.innerHTML = `
+                    <h3>我的排名</h3>
+                    <p>当前排名：第 ${data.currentUser.rank || '-'} 名</p>
+                    <p>总时长：${data.currentUser.totalHours.toFixed(1)} 小时</p>
+                `;
+            } catch (error) {
+                console.error('加载排行榜错误:', error);
+                showResult(error.message, true);
+            }
+        }
+
+        // 显示用户详情
+        async function showUserDetails(userId) {
+            try {
+                const response = await fetchWithAuth(`${API_BASE_URL}/api/rankings/user/${userId}`);
+                
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message);
+
+                const userDetailsContent = document.getElementById('userDetailsContent');
+                userDetailsContent.innerHTML = `
+                    <h2>用户详情</h2>
+                    <div class="user-details-info">
+                        <p><strong>用户名：</strong>${data.username}</p>
+                        <p><strong>年龄：</strong>${data.age || '-'}</p>
+                        <p><strong>总时长：</strong>${data.totalHours.toFixed(1)}小时</p>
+                        <p><strong>参与次数：</strong>${data.participationCount}次</p>
+                        <p><strong>当前排名：</strong>第${data.rank}名</p>
+                        <p><strong>最近活动：</strong>${data.lastActivityName || '-'}</p>
+                        <p><strong>活动时间：</strong>${data.lastActivityDate ? new Date(data.lastActivityDate).toLocaleString() : '-'}</p>
+                    </div>
+                `;
+
+                document.getElementById('userDetailsModal').style.display = 'block';
+            } catch (error) {
+                console.error('加载用户详情错误:', error);
+                showResult(error.message, true);
+            }
+        }
+
+        // 更新分页控件
+        function updatePagination(currentPage, totalPages) {
+            const pagination = document.getElementById('rankingsPagination');
+            pagination.innerHTML = '';
+
+            // 上一页按钮
+            const prevButton = document.createElement('button');
+            prevButton.textContent = '上一页';
+            prevButton.disabled = currentPage === 1;
+            prevButton.onclick = () => loadRankings(currentPage - 1);
+            pagination.appendChild(prevButton);
+
+            // 页码按钮
+            for (let i = 1; i <= totalPages; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.textContent = i;
+                pageButton.className = i === currentPage ? 'active' : '';
+                pageButton.onclick = () => loadRankings(i);
+                pagination.appendChild(pageButton);
+            }
+
+            // 下一页按钮
+            const nextButton = document.createElement('button');
+            nextButton.textContent = '下一页';
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.onclick = () => loadRankings(currentPage + 1);
+            pagination.appendChild(nextButton);
+        }
+
+        // 关闭模态框
+        document.querySelector('.close').onclick = function() {
+            document.getElementById('userDetailsModal').style.display = 'none';
+        }
+
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('userDetailsModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // 更新用户菜单
+        function updateUserMenu() {
+            const container = document.getElementById('userMenuContainer');
+            if (authToken) {
+                // 从localStorage获取用户信息
+                const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+                container.innerHTML = `
+                    <div class="user-menu">
+                        <button class="user-button">${userInfo.username || '用户'}</button>
+                        <div class="user-menu-content">
+                            <a href="#" onclick="logout()">退出登录</a>
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <button class="user-button" onclick="showLoginPanel()">登录</button>
+                `;
+            }
+        }
+
+        // 登出功能
+        function logout() {
+            clearAuth();
+            checkAuth();
+            updateUserMenu();
+        }
+
+        // 显示登录面板
+        function showLoginPanel() {
+            document.getElementById('loginPanel').style.display = 'block';
+            document.getElementById('mainPanel').style.display = 'none';
+        }
+
+        // 添加请求拦截器
+        async function fetchWithAuth(url, options = {}) {
+            if (isTokenExpired()) {
+                clearAuth();
+                checkAuth();
+                throw new Error('登录已过期，请重新登录');
+            }
+
+            const authOptions = {
+                ...options,
+                headers: {
+                    ...options.headers,
+                    'Authorization': `Bearer ${authToken}`
+                }
+            };
+
+            try {
+                const response = await fetch(url, authOptions);
+                if (response.status === 401) {
+                    clearAuth();
+                    checkAuth();
+                    throw new Error('登录已过期，请重新登录');
+                }
+                return response;
+            } catch (error) {
+                if (error.message.includes('登录已过期')) {
+                    showResult('登录已过期，请重新登录', true);
+                }
+                throw error;
+            }
+        }
+
+        // 在页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            if (authToken) {
+                loadUserStats();
+            }
+        });
+    </script>
+</body>
+</html> 

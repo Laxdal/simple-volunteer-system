@@ -1,0 +1,29 @@
+{
+  "name": "volunteer-system",
+  "version": "1.0.0",
+  "description": "义工时数管理系统",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "backup": "node src/scripts/backup.js",
+    "generate-test-data": "node src/scripts/generateTestData.js",
+    "update-stats": "node src/scripts/updateStats.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^8.1.1",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.1",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0",
+    "express-rate-limit": "^7.1.5",
+    "winston": "^3.11.0",
+    "json2csv": "^6.0.0-alpha.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  }
+}

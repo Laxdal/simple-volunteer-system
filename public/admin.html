@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>义工系统 - 管理员界面</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .panel {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button.delete {
+            background-color: #f44336;
+        }
+        button.delete:hover {
+            background-color: #da190b;
+        }
+        .status-badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-draft { background-color: #ffd700; }
+        .status-published { background-color: #90EE90; }
+        .status-cancelled { background-color: #ffcccb; }
+        .status-completed { background-color: #d3d3d3; }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            white-space: pre-wrap;
+        }
+        .error { color: #f44336; }
+        .success { color: #4CAF50; }
+        .activities-list {
+            margin-top: 20px;
+        }
+        .activity-item {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .tab-buttons {
+            margin-bottom: 20px;
+        }
+        .tab-buttons button {
+            background-color: #ddd;
+        }
+        .tab-buttons button.active {
+            background-color: #4CAF50;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        .modal-dialog {
+            margin: 30px auto;
+            max-width: 500px;
+            background: white;
+            border-radius: 8px;
+            position: relative;
+        }
+        .modal-content {
+            padding: 20px;
+            max-height: calc(100vh - 60px);
+            overflow-y: auto;
+        }
+        .modal-body {
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        .modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+        .modal-body::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        .modal-body::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        .modal-body::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        .modal-header {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa;
+            z-index: 1;
+            padding: 15px 20px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            margin: 0;
+            color: #000;
+            opacity: 0.5;
+        }
+        .close:hover {
+            opacity: 1;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .table th, .table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        .table th {
+            background-color: #f5f5f5;
+        }
+        .pagination {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .pagination button {
+            padding: 5px 10px;
+            background-color: #ddd;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .pagination button.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .pagination button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .modal .form-group {
+            margin-bottom: 15px;
+        }
+        .modal input[readonly] {
+            background-color: #f8f9fa;
+            cursor: not-allowed;
+        }
+        .modal select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+        }
+        .modal .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+        .modal .btn-primary:hover {
+            background-color: #45a049;
+        }
+        .activity-actions {
+            margin-top: 10px;
+        }
+        .activity-actions button {
+            margin-right: 8px;
+            margin-bottom: 5px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status-draft { 
+            background-color: #ffd700;
+            color: #000;
+        }
+        .status-published { 
+            background-color: #90EE90;
+            color: #000;
+        }
+        .status-cancelled { 
+            background-color: #ffcccb;
+            color: #000;
+        }
+        .status-completed { 
+            background-color: #d3d3d3;
+            color: #000;
+        }
+        .export-buttons {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+        }
+        .export-btn {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .export-btn:hover {
+            background-color: #45a049;
+        }
+        .export-btn i {
+            font-size: 16px;
+        }
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-right: -15px;
+            margin-left: -15px;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .col-md-3 {
+            flex: 0 0 25%;
+            max-width: 25%;
+            padding-right: 15px;
+            padding-left: 15px;
+        }
+        .form-control {
+            display: block;
+            width: 100%;
+            padding: .375rem .75rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #495057;
+            background-color: #fff;
+            border: 1px solid #ced4da;
+            border-radius: .25rem;
+            transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+        }
+        .btn-primary {
+            color: #fff;
+            background-color: #007bff;
+            border-color: #007bff;
+            padding: .375rem .75rem;
+            border-radius: .25rem;
+            cursor: pointer;
+        }
+        .btn-primary:hover {
+            background-color: #0069d9;
+            border-color: #0062cc;
+        }
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .user-menu {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .user-menu-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: #f9f9f9;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 4px;
+        }
+        
+        .user-menu-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .user-menu-content a:hover {
+            background-color: #f1f1f1;
+        }
+        
+        .user-menu:hover .user-menu-content {
+            display: block;
+        }
+        
+        .user-button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .user-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-container">
+        <h1>义工系统管理界面</h1>
+        <div id="userMenuContainer">
+            <!-- 用户菜单将通过JavaScript动态加载 -->
+        </div>
+    </div>
+
+    <!-- 登录面板 -->
+    <div class="panel" id="loginPanel">
+        <h2>管理员登录</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">用户名:</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">密码:</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit">登录</button>
+        </form>
+    </div>
+
+    <!-- 主要操作面板（登录后显示） -->
+    <div id="mainPanel" style="display: none;">
+        <div class="tab-buttons">
+            <button onclick="showTab('activities')" class="active">活动管理</button>
+            <button onclick="showTab('users')">用户管理</button>
+            <div class="export-buttons">
+                <button onclick="exportUsers()" class="export-btn">
+                    <i class="fas fa-file-export"></i>
+                    导出用户数据
+                </button>
+                <button onclick="exportActivities()" class="export-btn">
+                    <i class="fas fa-file-export"></i>
+                    导出活动数据
+                </button>
+            </div>
+        </div>
+
+        <!-- 活动管理面板 -->
+        <div id="activitiesTab" class="tab-content active">
+            <div class="panel">
+                <h2>创建新活动</h2>
+                <form id="createActivityForm">
+                    <div class="form-group">
+                        <label for="activityName">活动名称:</label>
+                        <input type="text" id="activityName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">活动描述:</label>
+                        <textarea id="description" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="location">活动地点:</label>
+                        <input type="text" id="locationName" required>
+                    </div>
+                    <div class="form-group">
+                        <h5>位置验证设置</h5>
+                        <div class="custom-control custom-switch mb-2">
+                            <input type="checkbox" class="custom-control-input" id="requireLocation">
+                            <label class="custom-control-label" for="requireLocation">需要位置验证</label>
+                        </div>
+                        <div id="locationSettings" style="display: none;">
+                            <div class="form-group">
+                                <label for="locationRange">位置验证范围（米）</label>
+                                <input type="number" class="form-control" id="locationRange" min="0" value="100">
+                            </div>
+                            <div class="form-group">
+                                <label for="latitude">纬度</label>
+                                <input type="number" class="form-control" id="latitude" step="0.000001">
+                            </div>
+                            <div class="form-group">
+                                <label for="longitude">经度</label>
+                                <input type="number" class="form-control" id="longitude" step="0.000001">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <h5>签到时间设置</h5>
+                        <div class="custom-control custom-switch mb-2">
+                            <input type="checkbox" class="custom-control-input" id="requireEarlyCheckIn">
+                            <label class="custom-control-label" for="requireEarlyCheckIn">限制提前签到时间</label>
+                        </div>
+                        <div id="checkInSettings" style="display: none;">
+                            <div class="form-group">
+                                <label for="earlyCheckInHours">允许提前签到时间（小时）</label>
+                                <input type="number" class="form-control" id="earlyCheckInHours" min="0" max="24" value="3">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="contactName">联系人姓名:</label>
+                        <input type="text" id="contactName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contactPhone">联系人电话:</label>
+                        <input type="tel" id="contactPhone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contactEmail">联系人邮箱:</label>
+                        <input type="email" id="contactEmail">
+                    </div>
+                    <div class="form-group">
+                        <label for="maxParticipants">最大参与人数:</label>
+                        <input type="number" id="maxParticipants" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="startTime">开始时间:</label>
+                        <input type="datetime-local" id="startTime" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="endTime">结束时间:</label>
+                        <input type="datetime-local" id="endTime" required>
+                    </div>
+                    <button type="submit">创建活动</button>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h2>活动列表</h2>
+                <div class="export-buttons">
+                    <button class="export-btn" onclick="exportActivities()">
+                        <i class="fas fa-file-export"></i>
+                        导出活动数据
+                    </button>
+                </div>
+                <div class="form-group">
+                    <label for="statusFilter">状态筛选:</label>
+                    <select id="statusFilter" onchange="loadActivities()">
+                        <option value="all">全部</option>
+                        <option value="draft">草稿</option>
+                        <option value="published">已发布</option>
+                        <option value="cancelled">已取消</option>
+                        <option value="completed">已完成</option>
+                    </select>
+                </div>
+                <div id="activitiesList" class="activities-list"></div>
+            </div>
+        </div>
+
+        <!-- 用户管理面板 -->
+        <div id="usersTab" class="tab-content">
+            <div class="panel">
+                <h2>用户列表</h2>
+                <div class="export-buttons">
+                    <button class="export-btn" onclick="exportUsers()">
+                        <i class="fas fa-file-export"></i>
+                        导出用户数据
+                    </button>
+                </div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>用户名</th>
+                            <th>姓名</th>
+                            <th>邮箱</th>
+                            <th>角色</th>
+                            <th>总时长(小时)</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersList">
+                    </tbody>
+                </table>
+                <div id="usersPagination" class="pagination"></div>
+            </div>
+        </div>
+
+        <!-- 添加日志管理面板 -->
+        <div class="panel">
+            <h2>系统日志</h2>
+            <div class="form-group">
+                <h3>导出日志</h3>
+                <form id="logExportForm" onsubmit="exportLogs(event)">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="startDate">开始日期</label>
+                            <input type="date" id="startDate" class="form-control" required>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="endDate">结束日期</label>
+                            <input type="date" id="endDate" class="form-control" required>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="logType">日志类型</label>
+                            <select id="logType" class="form-control" required>
+                                <option value="info">普通日志</option>
+                                <option value="error">错误日志</option>
+                                <option value="export">导出日志</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label for="exportFormat">导出格式</label>
+                            <select id="exportFormat" class="form-control" required>
+                                <option value="csv">CSV</option>
+                                <option value="json">JSON</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">导出日志</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 结果显示区域 -->
+    <div id="result" style="display: none;"></div>
+
+    <!-- 用户详情模态框 -->
+    <div class="modal" id="userDetailsModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">用户详情</h5>
+                    <button type="button" class="close" onclick="closeUserDetailsModal()">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="userDetailsContent">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑用户模态框 -->
+    <div class="modal" id="editUserModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">编辑用户信息</h5>
+                    <button type="button" class="close" onclick="closeEditUserModal()">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="editUserForm">
+                        <input type="hidden" id="editUserId">
+                        <div class="form-group">
+                            <label for="editUsername">用户名:</label>
+                            <input type="text" id="editUsername" required readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="editEmail">邮箱:</label>
+                            <input type="email" id="editEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editName">姓名:</label>
+                            <input type="text" id="editName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editGender">性别:</label>
+                            <select id="editGender" required>
+                                <option value="male">男</option>
+                                <option value="female">女</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editBirthday">出生日期:</label>
+                            <input type="date" id="editBirthday" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editPhone">电话:</label>
+                            <input type="tel" id="editPhone">
+                        </div>
+                        <div class="form-group">
+                            <label for="editRole">角色:</label>
+                            <select id="editRole" required>
+                                <option value="volunteer">志愿者</option>
+                                <option value="admin">管理员</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editStatus">状态:</label>
+                            <select id="editStatus" required>
+                                <option value="active">活跃</option>
+                                <option value="inactive">不活跃</option>
+                                <option value="suspended">已暂停</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">保存更改</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://nodejs.yhos.org';
+        let authToken = localStorage.getItem('adminToken');
+        let tokenExpiration = localStorage.getItem('adminTokenExpiration');
+
+        // 检查 token 是否过期
+        function isTokenExpired() {
+            const expiration = localStorage.getItem('adminTokenExpiration');
+            if (!expiration) return true;
+            return Date.now() >= parseInt(expiration);
+        }
+
+        // 清除登录状态
+        function clearAuth() {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminTokenExpiration');
+            localStorage.removeItem('adminInfo');
+            authToken = null;
+            tokenExpiration = null;
+        }
+
+        // 添加请求拦截器
+        async function fetchWithAuth(url, options = {}) {
+            if (isTokenExpired()) {
+                clearAuth();
+                checkAuth();
+                throw new Error('登录已过期，请重新登录');
+            }
+
+            const authOptions = {
+                ...options,
+                headers: {
+                    ...options.headers,
+                    'Authorization': `Bearer ${authToken}`
+                }
+            };
+
+            try {
+                const response = await fetch(url, authOptions);
+                if (response.status === 401) {
+                    clearAuth();
+                    checkAuth();
+                    throw new Error('登录已过期，请重新登录');
+                }
+                return response;
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        // 显示结果
+        function showResult(data, isError = false) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = isError ? 'error' : 'success';
+            resultDiv.innerHTML = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        }
+
+        // 切换标签页
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-buttons button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // 检查登录状态
+        function checkAuth() {
+            if (authToken && !isTokenExpired()) {
+                document.getElementById('loginPanel').style.display = 'none';
+                document.getElementById('mainPanel').style.display = 'block';
+                loadActivities();
+                loadUsers();
+            } else {
+                clearAuth();
+                document.getElementById('loginPanel').style.display = 'block';
+                document.getElementById('mainPanel').style.display = 'none';
+            }
+        }
+
+        // 登录表单处理
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: document.getElementById('username').value,
+                        password: document.getElementById('password').value
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message);
+
+                if (data.user.role !== 'admin') {
+                    throw new Error('需要管理员权限');
+                }
+
+                authToken = data.token;
+                // 设置 token 过期时间
+                const expirationTime = Date.now() + (data.expiresIn * 1000);
+                localStorage.setItem('adminToken', authToken);
+                localStorage.setItem('adminTokenExpiration', expirationTime);
+                localStorage.setItem('adminInfo', JSON.stringify({
+                    username: data.user.username,
+                    id: data.user.id,
+                    role: data.user.role
+                }));
+                showResult('登录成功');
+                checkAuth();
+                updateUserMenu();
+            } catch (error) {
+                showResult(error.message, true);
+            }
+        });
+
+        // 加载活动列表
+        async function loadActivities() {
+            try {
+                const status = document.getElementById('statusFilter').value;
+                const url = new URL(`${API_BASE_URL}/api/activities`);
+                
+                // 添加状态参数
+                url.searchParams.append('status', status);
+                
+                const response = await fetchWithAuth(url.toString());
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message);
+
+                const activitiesList = document.getElementById('activitiesList');
+                activitiesList.innerHTML = data.activities.map(activity => `
+                    <div class="activity-item">
+                        <h3>${activity.name}</h3>
+                        <p>${activity.description}</p>
+                        <p>地点: ${activity.location.name}</p>
+                        <p>时间: ${new Date(activity.startTime).toLocaleString()} - ${new Date(activity.endTime).toLocaleString()}</p>
+                        <p>参与人数: ${activity.currentParticipants}/${activity.maxParticipants}</p>
+                        <p>创建时间: ${new Date(activity.createdAt).toLocaleString()}</p>
+                        <p>状态: <span class="status-badge status-${activity.status}">${getStatusText(activity.status)}</span></p>
+                        <p>报名状态: ${activity.isRegisterable ? '可报名' : 
+                            activity.currentParticipants >= activity.maxParticipants ? '已满' : 
+                            new Date() >= new Date(activity.startTime) ? '已开始' :
+                            new Date() >= new Date(activity.endTime) ? '已结束' : '不可报名'
+                        }</p>
+                        <div class="activity-actions">
+                            ${activity.status !== 'published' ? 
+                                `<button onclick="updateActivityStatus('${activity._id}', 'published')">发布</button>` : ''}
+                            ${activity.status !== 'cancelled' ? 
+                                `<button onclick="updateActivityStatus('${activity._id}', 'cancelled')">取消</button>` : ''}
+                            ${activity.status !== 'completed' ? 
+                                `<button onclick="updateActivityStatus('${activity._id}', 'completed')">完成</button>` : ''}
+                            <button class="delete" onclick="deleteActivity('${activity._id}')">删除</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('加载活动列表错误:', error);
+                showResult('加载活动列表失败，请稍后重试', true);
+            }
+        }
+
+        // 获取状态文本
+        function getStatusText(status) {
+            const statusMap = {
+                'draft': '草稿',
+                'published': '已发布',
+                'cancelled': '已取消',
+                'completed': '已完成'
+            };
+            return statusMap[status] || status;
+        }
+
+        // 加载用户列表
+        async function loadUsers(page = 1) {
+            try {
+                const response = await fetchWithAuth(`${API_BASE_URL}/api/admin/users?page=${page}`);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || '加载用户列表失败');
+                }
+                
+                const usersList = document.getElementById('usersList');
+                usersList.innerHTML = '';
+                
+                if (!data.users || !Array.isArray(data.users)) {
+                    showResult('没有找到用户数据', true);
+                    return;
+                }
+                
+                data.users.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${user.username}</td>
+                        <td>${user.name || '-'}</td>
+                        <td>${user.email}</td>
+                        <td>${user.role}</td>
+                        <td>${user.stats ? user.stats.totalHours.toFixed(1) : '0'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-info" onclick="showUserDetails('${user._id}')">
+                                查看详情
+                            </button>
+                            <button class="btn btn-sm btn-warning" onclick="editUser('${user._id}')">
+                                编辑
+                            </button>
+                            ${user.role !== 'admin' ? `
+                                <button class="btn btn-sm btn-danger" onclick="deleteUser('${user._id}')">
+                                    删除
+                                </button>
+                            ` : ''}
+                        </td>
+                    `;
+                    usersList.appendChild(row);
+                });
+                
+                updatePagination(data.page, data.totalPages);
+            } catch (error) {
+                console.error('加载用户列表错误:', error);
+                showResult('加载用户列表失败，请稍后重试', true);
+            }
+        }
+
+        // 创建活动
+        document.getElementById('createActivityForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const activityData = {
+                    name: document.getElementById('activityName').value,
+                    description: document.getElementById('description').value,
+                    location: {
+                        name: document.getElementById('locationName').value,
+                        requireLocation: document.getElementById('requireLocation').checked
+                    },
+                    checkInConfig: {
+                        requireEarlyCheckIn: document.getElementById('requireEarlyCheckIn').checked,
+                        earlyCheckInHours: document.getElementById('requireEarlyCheckIn').checked ? 
+                            parseInt(document.getElementById('earlyCheckInHours').value) : 0
+                    },
+                    contactPerson: {
+                        name: document.getElementById('contactName').value,
+                        phone: document.getElementById('contactPhone').value,
+                        email: document.getElementById('contactEmail').value
+                    },
+                    maxParticipants: parseInt(document.getElementById('maxParticipants').value),
+                    startTime: document.getElementById('startTime').value,
+                    endTime: document.getElementById('endTime').value
+                };
+
+                // 如果需要位置验证，添加相关字段
+                if (activityData.location.requireLocation) {
+                    activityData.location.latitude = parseFloat(document.getElementById('latitude').value);
+                    activityData.location.longitude = parseFloat(document.getElementById('longitude').value);
+                    activityData.location.range = parseInt(document.getElementById('locationRange').value);
+                }
+
+                const response = await fetch(`${API_BASE_URL}/api/activities`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(activityData)
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message);
+
+                showResult('活动创建成功');
+                document.getElementById('createActivityForm').reset();
+                loadActivities();
+            } catch (error) {
+                showResult(error.message, true);
+            }
+        });
+
+        // 更新活动状态
+        async function updateActivityStatus(activityId, status) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/activities/${activityId}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ status })
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message);
+
+                showResult('活动状态更新成功');
+                loadActivities();
+            } catch (error) {
+                showResult(error.message, true);
+            }
+        }
+
+        // 删除活动
+        async function deleteActivity(activityId) {
+            if (!confirm('确定要删除这个活动吗？')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/activities/${activityId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message);
+
+                showResult('活动删除成功');
+                loadActivities();
+            } catch (error) {
+                showResult(error.message, true);
+            }
+        }
+
+        // 更新用户角色
+        async function updateUserRole(userId, role) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/role`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ role })
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message);
+
+                showResult('用户角色更新成功');
+                loadUsers();
+            } catch (error) {
+                showResult(error.message, true);
+            }
+        }
+
+        // 更新分页控件
+        function updatePagination(currentPage, totalPages) {
+            const pagination = document.getElementById('usersPagination');
+            let html = '';
+            
+            // 上一页
+            html += `<button onclick="loadUsers(${currentPage - 1})" ${currentPage <= 1 ? 'disabled' : ''}>上一页</button>`;
+            
+            // 页码
+            for (let i = 1; i <= totalPages; i++) {
+                html += `<button onclick="loadUsers(${i})" ${i === currentPage ? 'class="active"' : ''}>${i}</button>`;
+            }
+            
+            // 下一页
+            html += `<button onclick="loadUsers(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled' : ''}>下一页</button>`;
+            
+            pagination.innerHTML = html;
+        }
+
+        // 显示用户详情
+        async function showUserDetails(userId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('获取用户详情失败');
+                }
+                
+                const user = await response.json();
+                
+                const modal = document.getElementById('userDetailsModal');
+                const content = document.getElementById('userDetailsContent');
+                
+                content.innerHTML = `
+                    <div class="user-details">
+                        <p><strong>用户名：</strong>${user.username}</p>
+                        <p><strong>姓名：</strong>${user.name || '-'}</p>
+                        <p><strong>邮箱：</strong>${user.email}</p>
+                        <p><strong>角色：</strong>${user.role}</p>
+                        <p><strong>性别：</strong>${user.gender || '-'}</p>
+                        <p><strong>年龄：</strong>${user.age || '-'}</p>
+                        <p><strong>总时长：</strong>${user.stats ? user.stats.totalHours.toFixed(1) : '0'}小时</p>
+                        <p><strong>参与次数：</strong>${user.stats ? user.stats.participationCount : '0'}次</p>
+                        <p><strong>最近活动：</strong>${user.stats && user.stats.lastActivityDate ? new Date(user.stats.lastActivityDate).toLocaleDateString() : '-'}</p>
+                    </div>
+                `;
+                
+                modal.style.display = 'block';
+            } catch (error) {
+                console.error('获取用户详情错误:', error);
+                showResult('获取用户详情失败', true);
+            }
+        }
+
+        // 关闭用户详情模态框
+        function closeUserDetailsModal() {
+            const modal = document.getElementById('userDetailsModal');
+            modal.style.display = 'none';
+        }
+
+        // 编辑用户
+        async function editUser(userId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('获取用户信息失败');
+                }
+                
+                const user = await response.json();
+                
+                // 填充表单
+                document.getElementById('editUserId').value = userId;
+                document.getElementById('editUsername').value = user.username;
+                document.getElementById('editEmail').value = user.email;
+                document.getElementById('editName').value = user.name;
+                document.getElementById('editGender').value = user.gender;
+                document.getElementById('editBirthday').value = user.birthday.split('T')[0];
+                document.getElementById('editPhone').value = user.phone || '';
+                document.getElementById('editRole').value = user.role;
+                document.getElementById('editStatus').value = user.status;
+                
+                // 显示模态框
+                document.getElementById('editUserModal').style.display = 'block';
+            } catch (error) {
+                console.error('加载用户信息错误:', error);
+                showResult('加载用户信息失败', true);
+            }
+        }
+
+        // 关闭编辑用户模态框
+        function closeEditUserModal() {
+            document.getElementById('editUserModal').style.display = 'none';
+        }
+
+        // 处理编辑用户表单提交
+        document.getElementById('editUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                const userId = document.getElementById('editUserId').value;
+                const userData = {
+                    email: document.getElementById('editEmail').value,
+                    name: document.getElementById('editName').value,
+                    gender: document.getElementById('editGender').value,
+                    birthday: document.getElementById('editBirthday').value,
+                    phone: document.getElementById('editPhone').value,
+                    role: document.getElementById('editRole').value,
+                    status: document.getElementById('editStatus').value
+                };
+
+                const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.message || '更新用户信息失败');
+                }
+
+                showResult('用户信息更新成功');
+                closeEditUserModal();
+                loadUsers(); // 重新加载用户列表
+            } catch (error) {
+                console.error('更新用户信息错误:', error);
+                showResult(error.message, true);
+            }
+        });
+
+        // 删除用户
+        async function deleteUser(userId) {
+            if (!confirm('确定要删除这个用户吗？')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('删除用户失败');
+                }
+                
+                showResult('用户删除成功');
+                loadUsers();
+            } catch (error) {
+                console.error('删除用户错误:', error);
+                showResult('删除用户失败', true);
+            }
+        }
+
+        // 导出用户数据
+        async function exportUsers() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/users/export`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('导出失败');
+                }
+                
+                const data = await response.blob();
+                const url = window.URL.createObjectURL(data);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `用户数据_${new Date().toLocaleDateString()}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+                
+                showResult('用户数据导出成功');
+            } catch (error) {
+                console.error('导出用户数据错误:', error);
+                showResult('导出用户数据失败', true);
+            }
+        }
+
+        // 导出活动数据
+        async function exportActivities() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/admin/activities/export`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('导出失败');
+                }
+                
+                const data = await response.blob();
+                const url = window.URL.createObjectURL(data);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `活动数据_${new Date().toLocaleDateString()}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+                
+                showResult('活动数据导出成功');
+            } catch (error) {
+                console.error('导出活动数据错误:', error);
+                showResult('导出活动数据失败', true);
+            }
+        }
+
+        // 日志导出功能
+        async function exportLogs(event) {
+            event.preventDefault();
+            
+            try {
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+                const type = document.getElementById('logType').value;
+                const format = document.getElementById('exportFormat').value;
+
+                // 构建查询参数
+                const params = new URLSearchParams({
+                    startDate,
+                    endDate,
+                    type,
+                    format
+                });
+
+                const response = await fetch(`${API_BASE_URL}/api/admin/logs/export?${params}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || '导出失败');
+                }
+
+                // 获取文件名
+                const filename = response.headers.get('content-disposition')
+                    ?.split('filename=')[1] || `logs-${type}-${startDate}-to-${endDate}.${format}`;
+
+                // 下载文件
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                showResult('导出成功', 'success');
+            } catch (error) {
+                console.error('导出日志错误:', error);
+                showResult(error.message || '导出失败', 'error');
+            }
+        }
+
+        // 更新用户菜单
+        function updateUserMenu() {
+            const container = document.getElementById('userMenuContainer');
+            if (authToken) {
+                // 从localStorage获取用户信息
+                const userInfo = JSON.parse(localStorage.getItem('adminInfo') || '{}');
+                container.innerHTML = `
+                    <div class="user-menu">
+                        <button class="user-button">${userInfo.username || '管理员'}</button>
+                        <div class="user-menu-content">
+                            <a href="#" onclick="logout()">退出登录</a>
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <button class="user-button" onclick="showLoginPanel()">登录</button>
+                `;
+            }
+        }
+
+        // 登出功能
+        function logout() {
+            clearAuth();
+            checkAuth();
+            updateUserMenu();
+        }
+
+        // 显示登录面板
+        function showLoginPanel() {
+            document.getElementById('loginPanel').style.display = 'block';
+            document.getElementById('mainPanel').style.display = 'none';
+        }
+
+        // 在初始化时更新用户菜单
+        updateUserMenu();
+        checkAuth();
+
+        // 添加表单控制逻辑
+        document.getElementById('requireLocation').addEventListener('change', function() {
+            document.getElementById('locationSettings').style.display = 
+                this.checked ? 'block' : 'none';
+        });
+
+        document.getElementById('requireEarlyCheckIn').addEventListener('change', function() {
+            document.getElementById('checkInSettings').style.display = 
+                this.checked ? 'block' : 'none';
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateUserMenu();
+            checkAuth();
+
+            // 添加表单控制逻辑
+            document.getElementById('requireLocation').addEventListener('change', function() {
+                document.getElementById('locationSettings').style.display = 
+                    this.checked ? 'block' : 'none';
+            });
+
+            document.getElementById('requireEarlyCheckIn').addEventListener('change', function() {
+                document.getElementById('checkInSettings').style.display = 
+                    this.checked ? 'block' : 'none';
+            });
+        });
+    </script>
+</body>
+</html> 

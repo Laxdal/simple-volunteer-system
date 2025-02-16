@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>义工系统 - 用户管理测试</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .panel {
+            flex: 1;
+            min-width: 300px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .checkbox-group {
+            margin-bottom: 10px;
+        }
+        .checkbox-group label {
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .checkbox-group input {
+            width: auto;
+            margin-right: 5px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: none;
+            background: white;
+        }
+        .success { color: #4CAF50; }
+        .error { color: #f44336; }
+    </style>
+</head>
+<body>
+    <h2>义工时数管理系统</h2>
+    
+    <div class="container">
+        <div class="panel">
+            <!-- 注册表单 -->
+            <div class="form-group">
+                <h3>注册</h3>
+                <form id="registerForm">
+                    <label for="reg-username">用户名:</label>
+                    <input type="text" id="reg-username" required>
+                    
+                    <label for="reg-email">电子邮箱:</label>
+                    <input type="email" id="reg-email" required>
+                    
+                    <label for="reg-password">密码:</label>
+                    <input type="password" id="reg-password" required>
+                    
+                    <label for="reg-name">姓名:</label>
+                    <input type="text" id="reg-name" required>
+                    
+                    <label for="reg-gender">性别:</label>
+                    <select id="reg-gender" required>
+                        <option value="">请选择</option>
+                        <option value="male">男</option>
+                        <option value="female">女</option>
+                        <option value="other">其他</option>
+                    </select>
+                    
+                    <label for="reg-birthday">出生日期:</label>
+                    <input type="date" id="reg-birthday" required>
+                    
+                    <label for="reg-phone">电话号码:</label>
+                    <input type="tel" id="reg-phone">
+                    
+                    <label>地址信息:</label>
+                    <input type="text" id="reg-street" placeholder="街道">
+                    <input type="text" id="reg-city" placeholder="城市">
+                    <input type="text" id="reg-state" placeholder="省份">
+                    <input type="text" id="reg-zipCode" placeholder="邮编">
+                    
+                    <label>语言能力:</label>
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" name="languages" value="Chinese"> 中文
+                        </label>
+                        <label>
+                            <input type="checkbox" name="languages" value="English"> 英文
+                        </label>
+                        <label>
+                            <input type="checkbox" name="languages" value="Other"> 其他
+                        </label>
+                    </div>
+                    
+                    <button type="submit">注册</button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <!-- 登录表单 -->
+            <div class="form-group">
+                <h3>登录</h3>
+                <form id="loginForm">
+                    <label for="login-username">用户名:</label>
+                    <input type="text" id="login-username" required>
+                    
+                    <label for="login-password">密码:</label>
+                    <input type="password" id="login-password" required>
+                    
+                    <button type="submit">登录</button>
+                </form>
+            </div>
+
+            <!-- 获取用户信息 -->
+            <div class="form-group">
+                <h3>用户信息</h3>
+                <button id="getUserInfo">获取用户信息</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 显示结果 -->
+    <div id="result"></div>
+
+    <script>
+        const API_BASE_URL = 'https://nodejs.yhos.org';
+        
+        function showResult(data) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = data.error ? 'error' : 'success';
+            resultDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        }
+
+        function showError(error) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'error';
+            resultDiv.innerHTML = '<pre>错误: ' + error.message + '</pre>';
+        }
+
+        // 注册功能
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showResult({ status: 'sending', message: '正在发送注册请求...' });
+            try {
+                // 获取选中的语言
+                const languagesChecked = Array.from(document.getElementsByName('languages'))
+                    .filter(cb => cb.checked)
+                    .map(cb => cb.value);
+
+                const requestData = {
+                    username: document.getElementById('reg-username').value,
+                    email: document.getElementById('reg-email').value,
+                    password: document.getElementById('reg-password').value,
+                    name: document.getElementById('reg-name').value,
+                    gender: document.getElementById('reg-gender').value,
+                    birthday: document.getElementById('reg-birthday').value,
+                    phone: document.getElementById('reg-phone').value,
+                    address: {
+                        street: document.getElementById('reg-street').value,
+                        city: document.getElementById('reg-city').value,
+                        state: document.getElementById('reg-state').value,
+                        zipCode: document.getElementById('reg-zipCode').value
+                    },
+                    languages: languagesChecked
+                };
+                
+                console.log('发送注册请求:', requestData);
+                
+                const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Origin': window.location.origin
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || `HTTP error! status: ${response.status}`);
+                }
+                
+                showResult(data);
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    document.getElementById('registerForm').reset();
+                }
+            } catch (error) {
+                console.error('注册错误:', error);
+                showError(error);
+                // 显示详细错误信息
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML += '<pre>详细错误信息:\n' + JSON.stringify(error, null, 2) + '</pre>';
+            }
+        });
+
+        // 登录功能
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showResult({ status: 'sending', message: '正在发送登录请求...' });
+            try {
+                const requestData = {
+                    username: document.getElementById('login-username').value,
+                    password: document.getElementById('login-password').value
+                };
+                
+                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                showResult(data);
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    document.getElementById('loginForm').reset();
+                }
+            } catch (error) {
+                console.error('登录错误:', error);
+                showError(error);
+            }
+        });
+
+        // 获取用户信息
+        document.getElementById('getUserInfo').addEventListener('click', async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('未登录');
+                }
+
+                const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                showResult(data);
+            } catch (error) {
+                console.error('获取用户信息错误:', error);
+                showError(error);
+            }
+        });
+    </script>
+</body>
+</html>

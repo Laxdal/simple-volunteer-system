@@ -1,0 +1,336 @@
+<!-- 添加排行榜标签页 -->
+<li class="nav-item">
+  <a class="nav-link" data-toggle="tab" href="#leaderboard">排行榜</a>
+</li>
+
+<!-- 添加排行榜内容 -->
+<div class="tab-pane fade" id="leaderboard">
+  <div class="card">
+    <div class="card-header">
+      <h5 class="card-title">志愿者排行榜</h5>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>用户名</th>
+              <th>总时长(小时)</th>
+              <th>参与次数</th>
+              <th>年龄</th>
+              <th>最近活动日期</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="rankingsList">
+            <!-- 排行榜数据将通过 JavaScript 动态加载 -->
+          </tbody>
+        </table>
+      </div>
+      <nav>
+        <ul class="pagination justify-content-center" id="rankingsPagination">
+          <!-- 分页控件将通过 JavaScript 动态加载 -->
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<!-- 用户详情模态框 -->
+<div class="modal fade" id="userDetailsModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">用户详情</h5>
+        <button type="button" class="close" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="user-details">
+          <!-- 用户详情将通过 JavaScript 动态加载 -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 我的义工时数面板 -->
+<div class="card">
+  <div class="card-header">
+    <h5 class="card-title">我的义工时数</h5>
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-3">
+        <div class="stat-card">
+          <h6>总时长</h6>
+          <p id="totalHours">0小时</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <h6>参与次数</h6>
+          <p id="participationCount">0次</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <h6>当前排名</h6>
+          <p id="currentRank">-</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <h6>最近活动</h6>
+          <p id="lastActivity">-</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// 加载排行榜数据
+async function loadRankings(page = 1) {
+  try {
+    // 根据登录状态选择不同的API端点
+    const endpoint = authToken ? 
+      `${API_BASE_URL}/api/rankings?page=${page}` :
+      `${API_BASE_URL}/api/rankings/public?page=${page}`;
+    
+    const options = authToken ? {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    } : {};
+    
+    const response = await fetch(endpoint, options);
+    const data = await response.json();
+    
+    const rankingsList = document.getElementById('rankingsList');
+    rankingsList.innerHTML = '';
+    
+    data.rankings.forEach(rank => {
+      const row = document.createElement('tr');
+      // 构建基本信息
+      let html = `
+        <td>${rank.rank}</td>
+        <td>${rank.username}</td>
+        <td>${rank.totalHours.toFixed(1)}</td>
+      `;
+      
+      // 如果已登录，显示更多信息
+      if (authToken) {
+        html += `
+          <td>${rank.participationCount}</td>
+          <td>${rank.age || '-'}</td>
+          <td>${rank.lastActivityDate || '-'}</td>
+          <td>
+            ${rank.username === currentUsername ? `
+              <button class="btn btn-sm btn-info" onclick="showUserDetails('${rank.userId}')">
+                查看我的详情
+              </button>
+            ` : ''}
+          </td>
+        `;
+      }
+      
+      row.innerHTML = html;
+      rankingsList.appendChild(row);
+    });
+    
+    updatePagination(data.page, data.totalPages);
+    
+    // 更新表头
+    updateTableHeader(!!authToken);
+  } catch (error) {
+    console.error('加载排行榜错误:', error);
+    showAlert('加载排行榜失败，请稍后重试', 'danger');
+  }
+}
+
+// 更新表头显示
+function updateTableHeader(isAuthenticated) {
+  const headerRow = document.querySelector('#rankingsList').previousElementSibling.querySelector('tr');
+  
+  // 基本列
+  let headerHtml = `
+    <th>排名</th>
+    <th>用户名</th>
+    <th>总时长(小时)</th>
+  `;
+  
+  // 已登录用户可见的额外列
+  if (isAuthenticated) {
+    headerHtml += `
+      <th>参与次数</th>
+      <th>年龄</th>
+      <th>最近活动日期</th>
+      <th>操作</th>
+    `;
+  }
+  
+  headerRow.innerHTML = headerHtml;
+}
+
+// 更新分页控件
+function updatePagination(currentPage, totalPages) {
+  const pagination = document.getElementById('rankingsPagination');
+  pagination.innerHTML = '';
+  
+  // 上一页
+  const prevLi = document.createElement('li');
+  prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+  prevLi.innerHTML = `
+    <a class="page-link" href="#" onclick="loadRankings(${currentPage - 1})">
+      上一页
+    </a>
+  `;
+  pagination.appendChild(prevLi);
+  
+  // 页码
+  for (let i = 1; i <= totalPages; i++) {
+    const li = document.createElement('li');
+    li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+    li.innerHTML = `
+      <a class="page-link" href="#" onclick="loadRankings(${i})">
+        ${i}
+      </a>
+    `;
+    pagination.appendChild(li);
+  }
+  
+  // 下一页
+  const nextLi = document.createElement('li');
+  nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+  nextLi.innerHTML = `
+    <a class="page-link" href="#" onclick="loadRankings(${currentPage + 1})">
+      下一页
+    </a>
+  `;
+  pagination.appendChild(nextLi);
+}
+
+// 显示用户详情（只能查看自己的）
+async function showUserDetails(userId) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/rankings/user/${userId}`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    const data = await response.json();
+    
+    const userDetails = document.querySelector('.user-details');
+    userDetails.innerHTML = `
+      <div class="user-info">
+        <p><strong>用户名：</strong>${data.username}</p>
+        <p><strong>年龄：</strong>${data.age || '-'}</p>
+        <p><strong>总时长：</strong>${data.totalHours.toFixed(1)}小时</p>
+        <p><strong>参与次数：</strong>${data.participationCount}次</p>
+        <p><strong>当前排名：</strong>第${data.rank}名</p>
+        <p><strong>最近活动：</strong>${data.lastActivityName || '-'}</p>
+        <p><strong>活动时间：</strong>${data.lastActivityDate ? new Date(data.lastActivityDate).toLocaleString() : '-'}</p>
+      </div>
+    `;
+    
+    $('#userDetailsModal').modal('show');
+  } catch (error) {
+    console.error('加载用户详情错误:', error);
+    showAlert('加载用户详情失败，请稍后重试', 'danger');
+  }
+}
+
+// 加载用户统计信息
+async function loadUserStats() {
+  try {
+    if (!authToken) {
+      console.log('用户未登录');
+      return;
+    }
+
+    // 确保有用户ID
+    if (!currentUserId) {
+      // 先获取当前用户信息
+      const userResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
+      });
+      
+      if (!userResponse.ok) {
+        throw new Error('获取用户信息失败');
+      }
+      
+      const userData = await userResponse.json();
+      currentUserId = userData._id;
+    }
+
+    // 获取用户统计信息
+    const response = await fetch(`${API_BASE_URL}/api/rankings/user/${currentUserId}`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('获取统计信息失败');
+    }
+
+    const data = await response.json();
+    
+    // 更新统计显示
+    document.getElementById('totalHours').textContent = `${data.totalHours.toFixed(1)}小时`;
+    document.getElementById('participationCount').textContent = `${data.participationCount}次`;
+    document.getElementById('currentRank').textContent = `第${data.rank}名`;
+    
+    if (data.lastActivityName) {
+      const lastActivityDate = new Date(data.lastActivityDate).toLocaleString();
+      document.getElementById('lastActivity').textContent = `${data.lastActivityName}\n${lastActivityDate}`;
+    } else {
+      document.getElementById('lastActivity').textContent = '暂无活动';
+    }
+
+    // 同时更新旧面板的数据（如果存在）
+    const oldTotalHoursElement = document.querySelector('#userStats #totalHours');
+    if (oldTotalHoursElement) {
+      oldTotalHoursElement.textContent = data.totalHours.toFixed(1);
+    }
+  } catch (error) {
+    console.error('加载用户统计信息错误:', error);
+    showAlert('加载统计信息失败，请稍后重试', 'danger');
+  }
+}
+
+// 在页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', async () => {
+  if (authToken) {
+    try {
+      // 先获取用户信息
+      const userResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
+      });
+      
+      if (userResponse.ok) {
+        const userData = await userResponse.json();
+        currentUserId = userData._id;
+        currentUsername = userData.username;
+        
+        // 加载用户统计信息
+        await loadUserStats();
+      }
+    } catch (error) {
+      console.error('初始化用户信息错误:', error);
+    }
+  }
+  
+  // 加载排行榜
+  loadRankings();
+});
+</script>
+
+// ... existing code ... 

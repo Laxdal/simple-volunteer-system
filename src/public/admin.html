@@ -1,0 +1,77 @@
+<!-- 在用户管理表格中添加总时长列 -->
+<th>总参与时长(小时)</th>
+
+// 在加载用户列表的函数中添加总时长显示
+async function loadUsers(page = 1) {
+  try {
+    const response = await fetch(`/api/admin/users?page=${page}`);
+    const data = await response.json();
+    
+    const usersList = document.getElementById('usersList');
+    usersList.innerHTML = '';
+    
+    data.users.forEach(user => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${user.username}</td>
+        <td>${user.name || '-'}</td>
+        <td>${user.email}</td>
+        <td>${user.role}</td>
+        <td>${user.stats ? user.stats.totalHours.toFixed(1) : '0'}</td>
+        <td>
+          <button class="btn btn-sm btn-info" onclick="showUserDetails('${user._id}')">
+            查看详情
+          </button>
+          <button class="btn btn-sm btn-warning" onclick="editUser('${user._id}')">
+            编辑
+          </button>
+          ${user.role !== 'admin' ? `
+            <button class="btn btn-sm btn-danger" onclick="deleteUser('${user._id}')">
+              删除
+            </button>
+          ` : ''}
+        </td>
+      `;
+      usersList.appendChild(row);
+    });
+    
+    updatePagination(data.page, data.totalPages);
+  } catch (error) {
+    console.error('加载用户列表错误:', error);
+    showAlert('加载用户列表失败，请稍后重试', 'danger');
+  }
+}
+
+// 在用户详情模态框中添加总时长显示
+async function showUserDetails(userId) {
+  try {
+    const response = await fetch(`/api/admin/users/${userId}`);
+    const user = await response.json();
+    
+    const userDetails = document.querySelector('.user-details');
+    userDetails.innerHTML = `
+      <div class="card">
+        <div class="card-body">
+          <h6 class="card-subtitle mb-2 text-muted">基本信息</h6>
+          <p><strong>用户名：</strong>${user.username}</p>
+          <p><strong>姓名：</strong>${user.name || '-'}</p>
+          <p><strong>邮箱：</strong>${user.email}</p>
+          <p><strong>角色：</strong>${user.role}</p>
+          <p><strong>性别：</strong>${user.gender || '-'}</p>
+          <p><strong>年龄：</strong>${user.age || '-'}</p>
+          <hr>
+          <h6 class="card-subtitle mb-2 text-muted">参与统计</h6>
+          <p><strong>总时长：</strong>${user.stats ? user.stats.totalHours.toFixed(1) : '0'}小时</p>
+          <p><strong>参与次数：</strong>${user.stats ? user.stats.participationCount : '0'}次</p>
+          <p><strong>当前排名：</strong>${user.stats ? `第${user.stats.rank}名` : '-'}</p>
+          <p><strong>最近活动：</strong>${user.stats && user.stats.lastActivityDate ? user.stats.lastActivityDate : '-'}</p>
+        </div>
+      </div>
+    `;
+    
+    $('#userDetailsModal').modal('show');
+  } catch (error) {
+    console.error('加载用户详情错误:', error);
+    showAlert('加载用户详情失败，请稍后重试', 'danger');
+  }
+} 
