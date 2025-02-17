@@ -94,13 +94,8 @@ API 文档位于 `docs/api_documentation.md`
 npm test
 ```
 
-## 贡献指南
-
-1. Fork 本仓库
-2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 提交 Pull Request
+## Cursorrles
+文字中包含了项目使用的.cursorrules文件，欢迎参考使用
 
 ## 许可证
 
