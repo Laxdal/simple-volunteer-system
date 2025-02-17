@@ -69,7 +69,7 @@ docker-compose up -d
 
 ## API 文档
 
-API 文档位于 `docs/api_documentation.md`
+详情请参考[API 文档](docs/api_documentation.md)
 
 ## 开发指南
 
@@ -93,6 +93,18 @@ API 文档位于 `docs/api_documentation.md`
 ```bash
 npm test
 ```
+
+数据生成脚本:
+```bash
+npm run generate-test-data
+```
+
+或通过管理员API：
+```bash
+curl -X POST https://YOUR_DOMAIN/api/rankings/update \
+     -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
+```
+数据生成脚本详情参考：[Test文档](docs/test_documentation.md)
 
 ## Cursorrles
 文字中包含了项目使用的.cursorrules文件，欢迎参考使用
