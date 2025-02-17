@@ -104,7 +104,7 @@ npm run generate-test-data
 curl -X POST https://YOUR_DOMAIN/api/rankings/update \
      -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
 ```
-数据生成脚本详情参考：[Test文档](docs/test_documentation.md)
+数据生成脚本详情参考：[Test文档](docs/test_docmentation.md)
 
 ## Cursorrles
 文字中包含了项目使用的.cursorrules文件，欢迎参考使用
